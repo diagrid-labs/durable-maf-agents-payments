@@ -1,0 +1,34 @@
+# Requests for the VS Code REST Client extension (humao.rest-client).
+# Start the app first with `aspire run`. Click "Send Request" above a request to run it.
+
+@baseUrl = http://localhost:5090
+@runId = run-1
+@gatewayUrl = http://localhost:5091
+
+### Start a payment run (processes up to 8 pending invoices)
+# Use a new id for each run: starting an id that already exists is rejected.
+POST {{baseUrl}}/payment-runs
+Content-Type: application/json
+
+{
+  "id": "{{runId}}",
+  "maxInvoices": 8
+}
+
+### Get the status and output of the run
+GET {{baseUrl}}/payment-runs/{{runId}}
+
+### Pause the run
+POST {{baseUrl}}/payment-runs/{{runId}}/pause
+
+### Resume the run
+POST {{baseUrl}}/payment-runs/{{runId}}/resume
+
+### Terminate the run
+POST {{baseUrl}}/payment-runs/{{runId}}/terminate
+
+### List the payments the mock payment gateway has accepted
+GET {{gatewayUrl}}/payments
+
+### Clear all payments in the mock gateway (demo reset)
+DELETE {{gatewayUrl}}/payments

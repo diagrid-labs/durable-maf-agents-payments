@@ -64,6 +64,23 @@ dotnet restore
 dotnet test   # optional: runs the unit tests
 ```
 
+## Call the API with the REST Client
+
+The repo includes [`local.http`](local.http), a set of requests for the
+[REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension
+for VS Code. VS Code suggests the extension when you open the repo (see `.vscode/extensions.json`).
+Every `curl` command below has an equivalent request in this file.
+
+1. Install the **REST Client** extension (`humao.rest-client`).
+2. Open `local.http`.
+3. Click **Send Request** above a request, or put the cursor in it and press `Ctrl+Alt+R`
+   (`Cmd+Alt+R` on macOS). The response opens in a side panel.
+4. Change the `@runId` variable at the top of the file to use a new run id. Starting a run with
+   an id that already exists is rejected.
+
+The file has requests to start a run, get its status, pause, resume and terminate it, and to
+list or clear the payments in the mock payment gateway.
+
 ## Run locally with Dapr
 
 In local mode the AppHost starts a Valkey container as the workflow state store (with a data
@@ -87,7 +104,7 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
 
 3. **Open the Dev Dashboard** at http://localhost:9090 to watch workflow runs, sidecars and components.
 
-4. **Start a payment run.**
+4. **Start a payment run** with the REST Client request in `local.http`, or with `curl`.
 
    ```bash
    curl -X POST http://localhost:5090/payment-runs \
