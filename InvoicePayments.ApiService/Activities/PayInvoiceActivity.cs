@@ -15,6 +15,9 @@ internal sealed partial class PayInvoiceActivity(
 {
     private static int _acceptedPayments;
 
+    private static readonly bool SimulateCrash =
+        string.Equals(Environment.GetEnvironmentVariable("SIMULATE_CRASH"), "true", StringComparison.OrdinalIgnoreCase);
+
     public override async Task<PaymentReceipt> RunAsync(WorkflowActivityContext context, PaymentRequest request)
     {
         var receipt = await gateway.PayAsync(request);
@@ -24,11 +27,12 @@ internal sealed partial class PayInvoiceActivity(
         else
             LogPaid(logger, request.InvoiceId, receipt.PaymentId, receipt.Status);
 
-        // 💥 DURABILITY DEMO: crash right after the provider accepted the second new payment,
-        // before this activity's result is checkpointed. Leave it uncommented for the first run,
-        // then comment it out and restart: the workflow resumes, re-runs this activity for the
+        // 💥 DURABILITY DEMO (opt-in): with SIMULATE_CRASH=true, crash right after the provider
+        // accepted the second new payment, before this activity's result is checkpointed. Restart
+        // the app without SIMULATE_CRASH: the workflow resumes, re-runs this activity for the
         // in-flight invoices, and the provider answers with the original payment.
-        if (!receipt.Replayed && Interlocked.Increment(ref _acceptedPayments) == 2) Environment.FailFast("Simulated crash after the payment was accepted.");
+        if (SimulateCrash && !receipt.Replayed && Interlocked.Increment(ref _acceptedPayments) == 2)
+            Environment.FailFast("Simulated crash after the payment was accepted.");
 
         return receipt;
     }

@@ -21,6 +21,8 @@ var api = builder.AddProject<Projects.InvoicePayments_ApiService>("invoice-payme
     .WaitFor(gateway)
     .WithEnvironment("DATA_DIR", dataDir)
     .WithEnvironment("OUTPUT_DIR", outputDir)
+    // Opt-in crash for the durability demo: start the AppHost with SIMULATE_CRASH=true.
+    .WithEnvironment("SIMULATE_CRASH", builder.Configuration["SIMULATE_CRASH"] ?? "false")
     // Pin the API's HTTP endpoint so the README URLs are stable.
     .WithEndpoint("http", endpoint => endpoint.Port = 5090);
 

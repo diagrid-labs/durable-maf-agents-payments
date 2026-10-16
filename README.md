@@ -119,9 +119,6 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
    aspire run
    ```
 
-   You can also run `dotnet run --project InvoicePayments.AppHost`. The Aspire dashboard opens
-   at http://localhost:17000. Wait until `invoice-payments` and `payment-gateway` show as running.
-
 3. **Open the Dev Dashboard** at http://localhost:9090 to watch workflow runs, sidecars and components.
 
 4. **Start a payment run** with the REST Client request in `local.http`, or with `curl` or `Invoke-RestMethod`.
@@ -164,12 +161,16 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
    Invoices that fail a deterministic check (for example a changed bank account or an amount over
    the PO) are held, even when the agent recommends paying.
 
-7. **Try the crash-and-resume demo.** `PayInvoiceActivity` contains a deliberate crash that
-   fires right after the provider accepts the second new payment, before the activity result is
-   checkpointed.
+7. **Try the crash-and-resume demo.** By default the app does not crash, so the run in steps 4
+   to 6 completes normally. To see durability in action, start the app with `SIMULATE_CRASH=true`.
+   `PayInvoiceActivity` then kills the API process right after the payment provider accepts the
+   second new payment, before the activity result is checkpointed. You then restart the app
+   without the variable, and the workflow resumes.
 
-   1. Reset the demo state: stop the app, then remove the state volume and the `out/` folder,
-      and run `aspire run` again.
+   1. Stop the running app with `Ctrl+C` in the terminal where `aspire run` is running. Wait until
+      the Valkey container has stopped: Docker refuses to remove the state volume while the
+      container is still using it.
+   2. Reset the demo state by removing the state volume and the `out/` folder.
 
       macOS and Linux:
 
@@ -185,7 +186,22 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
       Remove-Item -Recurse -Force out
       ```
 
-   2. Start a run with the id `run-crash`. The API process dies mid-run, so the request may
+   3. Start the app with the crash enabled.
+
+      macOS and Linux:
+
+      ```bash
+      SIMULATE_CRASH=true aspire run
+      ```
+
+      Windows (PowerShell):
+
+      ```powershell
+      $env:SIMULATE_CRASH = "true"
+      aspire run
+      ```
+
+   4. Start a run with the id `run-crash`. The API process dies mid-run, so the request may
       fail or the connection may close. That is expected.
 
       macOS and Linux:
@@ -203,13 +219,27 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
         -ContentType "application/json" `
         -Body '{ "id": "run-crash", "maxInvoices": 8 }'
       ```
-   3. In `InvoicePayments.ApiService/Activities/PayInvoiceActivity.cs`, comment out the
-      `Environment.FailFast` line and run `aspire run` again.
-   4. The workflow resumes from its history. Check the status of `run-crash` (as in step 5, with
-      `run-crash` in the URL), then look at `out/`: each invoice
-      appears once in `agent-calls.log` (the LLM calls were not repeated), and the second invoice
-      has one payment in `payments.json`. The provider's `Idempotent-Replayed` response shows up as a
-      warning in the gateway logs.
+
+   5. Stop the remaining processes (`Ctrl+C`), then start the app again **without** the crash.
+
+      macOS and Linux:
+
+      ```bash
+      aspire run
+      ```
+
+      Windows (PowerShell):
+
+      ```powershell
+      Remove-Item Env:SIMULATE_CRASH
+      aspire run
+      ```
+
+   6. The workflow resumes from its history. Check the status of `run-crash` (as in step 5, with
+      `run-crash` in the URL), then look at `out/`: each invoice appears once in
+      `agent-calls.log` (the LLM calls were not repeated), and the second invoice has one payment
+      in `payments.json`. The provider's `Idempotent-Replayed` response shows up as a warning in
+      the gateway logs.
 
 8. **Pause, resume or terminate a run** while it is in flight.
 
@@ -279,7 +309,7 @@ Dapr runtime instead, and Catalyst stores the workflow state.
 7. **Watch the run in the Catalyst console.** The workflow and agent runs appear for the
    `invoice-payments` App ID, with their activity history.
 
-8. **Try the crash-and-resume demo.** Run it as in local step 7. State lives in Catalyst, so you
+8. **Try the crash-and-resume demo.** Run it as in local step 7, setting `SIMULATE_CRASH` in the shell that launches the AppHost. State lives in Catalyst, so you
    do not need to remove a Docker volume. Use a new run id for each attempt.
 
 9. **Clean up.** Stop the app with `Ctrl+C`, then remove the three `DAPR_*` variables to go
