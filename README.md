@@ -119,6 +119,11 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
    aspire run
    ```
 
+   The Aspire dashboard opens in your browser. Check that all resources (`statestore`,
+   `payment-gateway`, `invoice-payments` and `dev-dashboard`) are running. The `statestore`
+   container is sometimes stopped: start it from the dashboard, and wait until all resources are
+   running before you continue. Do the same check after every restart in the crash demo below.
+
 3. **Open the Dev Dashboard** at http://localhost:9090 to watch workflow runs, sidecars and components.
 
 4. **Start a payment run** with the REST Client request in `local.http`, or with `curl` or `Invoke-RestMethod`.
@@ -220,7 +225,18 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
         -Body '{ "id": "run-crash", "maxInvoices": 8 }'
       ```
 
-   5. Stop the remaining processes (`Ctrl+C`), then start the app again **without** the crash.
+      The crash kills only the API process. The payment gateway keeps running, so after a few
+      seconds the `out/` folder shows the state at the moment of the crash:
+
+      - `agent-calls.log` has one line (timestamp, invoice id, supplier) for each invoice whose
+        agent review had completed. The invoices run in parallel, so which ones are listed and
+        in what order varies per run.
+      - `payments.json` has the payments the provider accepted before the crash: the second new
+        payment is in there even though the API never received the response. Other invoices that
+        were being paid in parallel at that moment may be in there too.
+      - There is no `payment-run-run-crash.md` yet, because the run did not finish.
+
+   5. Stop the remaining processes (`Ctrl+C`), then start the app again **without** the crash environment variable.
 
       macOS and Linux:
 
@@ -236,10 +252,20 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
       ```
 
    6. The workflow resumes from its history. Check the status of `run-crash` (as in step 5, with
-      `run-crash` in the URL), then look at `out/`: each invoice appears once in
-      `agent-calls.log` (the LLM calls were not repeated), and the second invoice has one payment
-      in `payments.json`. The provider's `Idempotent-Replayed` response shows up as a warning in
-      the gateway logs.
+      `run-crash` in the URL) until it is `Completed`, then compare `out/` with what you saw after
+      the crash:
+
+      - `agent-calls.log` lists each invoice exactly once. The LLM calls recorded before the
+        crash were not repeated, and the new lines after a visible time gap are the invoices
+        that were not reviewed yet.
+      - `payments.json` has one payment per paid invoice and no duplicates. The payments from
+        before the crash keep their original payment ids: when the workflow re-ran
+        `PayInvoiceActivity`, the provider recognised the idempotency key and returned the
+        original payment (an `Idempotent-Replayed` warning in the gateway logs) instead of
+        charging again.
+      - `payment-run-run-crash.md` now exists. It holds the outcome of every invoice and the
+        agent's summary. Invoices that failed a check, such as `INV-1004` which has no purchase
+        order, are held and have no payment.
 
 8. **Pause, resume or terminate a run** while it is in flight.
 
