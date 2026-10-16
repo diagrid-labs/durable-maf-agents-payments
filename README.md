@@ -26,7 +26,7 @@ For each pending invoice, `PaymentRunWorkflow` does the following:
 
 | Project | Purpose |
 |---|---|
-| `InvoicePayments.AppHost` | Aspire AppHost. Starts the services, a Valkey state store, the Dapr sidecar and the Diagrid Dev Dashboard. |
+| `InvoicePayments.AppHost` | Aspire AppHost. Starts the services, a Valkey state store, the Dapr sidecar and the Dapr Dev Dashboard. |
 | `InvoicePayments.ApiService` | The workflow, activities, agents and the HTTP API (port 5090). |
 | `InvoicePayments.PaymentGateway` | Mock payment provider that honours `Idempotency-Key` (port 5091). |
 | `InvoicePayments.ServiceDefaults` | Shared Aspire service defaults (OpenTelemetry, health checks). |
@@ -51,7 +51,7 @@ authorization before you expose the API.
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Docker](https://www.docker.com/products/docker-desktop/) (or another container runtime). Aspire uses it for the Valkey state store.
 - [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/), initialized with `dapr init`
-- [Diagrid Dev Dashboard](https://github.com/diagridio/diagrid-dev-dashboard) (`diagrid-dev-dashboard` on your `PATH`). The AppHost starts it on port 9090.
+- [Diagrid Dapr Dev Dashboard](https://github.com/diagridio/dev-dashboard) (`diagrid-dev-dashboard` on your `PATH`). The AppHost starts it on port 9090.
 - An [OpenAI API key](https://platform.openai.com/api-keys). The agents use `gpt-4.1-mini` through a Dapr conversation component.
 - For the Catalyst path only: a [Diagrid Catalyst](https://www.diagrid.io/catalyst) account and the [Diagrid CLI](https://docs.diagrid.io/).
 
