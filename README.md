@@ -3,6 +3,34 @@
 A .NET Aspire demo of a durable **invoice payment run**. A Dapr Workflow processes a batch of
 supplier invoices. For each invoice it runs deterministic checks, asks a MAF agent for a recommendation, and pays the approved invoices through a mock payment provider. Because the run is a workflow, you can kill the app mid-run, restart it, and the run resumes without repeating LLM calls or paying twice.
 
+```mermaid
+flowchart TD
+    start([POST /payment-runs]) --> list[ListPendingInvoicesActivity]
+    list --> fan{{"Fan out: one branch per invoice, in parallel"}}
+
+    subgraph perInvoice ["For each invoice"]
+        direction TB
+        check[GetInvoiceCaseActivity<br/>deterministic checks]
+        review[["InvoiceReviewer agent<br/>pay or hold"]]
+        record[RecordAgentCallActivity<br/>append to agent-calls.log]
+        decide{"PaymentPolicy<br/>approved?"}
+        pay[PayInvoiceActivity<br/>stable Idempotency-Key, retried]
+        held[Invoice held]
+        paid[Invoice paid]
+
+        check --> review --> record --> decide
+        decide -- yes --> pay --> paid
+        decide -- no --> held
+    end
+
+    fan --> check
+    paid --> join
+    held --> join
+    join{{"Fan in: wait for all invoices"}} --> summarize[["RunSummarizer agent<br/>summary of the run"]]
+    summarize --> report[WritePaymentReportActivity<br/>out/payment-run-id.md]
+    report --> done([PaymentRunOutput])
+```
+
 ## What the demo shows
 
 For each pending invoice, `PaymentRunWorkflow` does the following:
