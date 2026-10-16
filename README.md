@@ -64,23 +64,6 @@ dotnet restore
 dotnet test   # optional: runs the unit tests
 ```
 
-## Call the API with the REST Client
-
-The repo includes [`local.http`](local.http), a set of requests for the
-[REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension
-for VS Code. VS Code suggests the extension when you open the repo (see `.vscode/extensions.json`).
-Every `curl` command below has an equivalent request in this file.
-
-1. Install the **REST Client** extension (`humao.rest-client`).
-2. Open `local.http`.
-3. Click **Send Request** above a request, or put the cursor in it and press `Ctrl+Alt+R`
-   (`Cmd+Alt+R` on macOS). The response opens in a side panel.
-4. Change the `@runId` variable at the top of the file to use a new run id. Starting a run with
-   an id that already exists is rejected.
-
-The file has requests to start a run, get its status, pause, resume and terminate it, and to
-list or clear the payments in the mock payment gateway.
-
 ## Run locally with Dapr
 
 In local mode the AppHost starts a Valkey container as the workflow state store (with a data
@@ -88,8 +71,17 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
 
 1. **Add your OpenAI key.** Copy the example secrets file and fill in your key. The file is git-ignored.
 
+   macOS and Linux:
+
    ```bash
    cp InvoicePayments.AppHost/secrets.example.json InvoicePayments.AppHost/secrets.json
+   # edit secrets.json and set "openai-api-key"
+   ```
+
+   Windows (PowerShell):
+
+   ```powershell
+   Copy-Item InvoicePayments.AppHost/secrets.example.json InvoicePayments.AppHost/secrets.json
    # edit secrets.json and set "openai-api-key"
    ```
 
@@ -104,7 +96,9 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
 
 3. **Open the Dev Dashboard** at http://localhost:9090 to watch workflow runs, sidecars and components.
 
-4. **Start a payment run** with the REST Client request in `local.http`, or with `curl`.
+4. **Start a payment run** with the REST Client request in `local.http`, or with `curl` or `Invoke-RestMethod`.
+
+   macOS and Linux:
 
    ```bash
    curl -X POST http://localhost:5090/payment-runs \
@@ -112,10 +106,26 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
      -d '{ "id": "run-1", "maxInvoices": 8 }'
    ```
 
+   Windows (PowerShell):
+
+   ```powershell
+   Invoke-RestMethod -Method Post -Uri http://localhost:5090/payment-runs `
+     -ContentType "application/json" `
+     -Body '{ "id": "run-1", "maxInvoices": 8 }'
+   ```
+
 5. **Check the status** until it is `Completed`.
+
+   macOS and Linux:
 
    ```bash
    curl http://localhost:5090/payment-runs/run-1
+   ```
+
+   Windows (PowerShell):
+
+   ```powershell
+   Invoke-RestMethod http://localhost:5090/payment-runs/run-1
    ```
 
 6. **Inspect the results.** Everything is written to the `out/` folder:
@@ -130,23 +140,65 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
    fires right after the provider accepts the second new payment, before the activity result is
    checkpointed.
 
-   1. Reset the demo state: stop the app, run
-      `docker volume rm invoice-payments-state-data`, delete the `out/` folder, then run
-      `aspire run` again.
-   2. Start a run (step 4) with a new id. The API process dies mid-run.
+   1. Reset the demo state: stop the app, then remove the state volume and the `out/` folder,
+      and run `aspire run` again.
+
+      macOS and Linux:
+
+      ```bash
+      docker volume rm invoice-payments-state-data
+      rm -rf out
+      ```
+
+      Windows (PowerShell):
+
+      ```powershell
+      docker volume rm invoice-payments-state-data
+      Remove-Item -Recurse -Force out
+      ```
+
+   2. Start a run with the id `run-crash`. The API process dies mid-run, so the request may
+      fail or the connection may close. That is expected.
+
+      macOS and Linux:
+
+      ```bash
+      curl -X POST http://localhost:5090/payment-runs \
+        -H "Content-Type: application/json" \
+        -d '{ "id": "run-crash", "maxInvoices": 8 }'
+      ```
+
+      Windows (PowerShell):
+
+      ```powershell
+      Invoke-RestMethod -Method Post -Uri http://localhost:5090/payment-runs `
+        -ContentType "application/json" `
+        -Body '{ "id": "run-crash", "maxInvoices": 8 }'
+      ```
    3. In `InvoicePayments.ApiService/Activities/PayInvoiceActivity.cs`, comment out the
       `Environment.FailFast` line and run `aspire run` again.
-   4. The workflow resumes from its history. Check the status, then look at `out/`: each invoice
+   4. The workflow resumes from its history. Check the status of `run-crash` (as in step 5, with
+      `run-crash` in the URL), then look at `out/`: each invoice
       appears once in `agent-calls.log` (the LLM calls were not repeated), and the second invoice
       has one payment in `payments.json`. The provider's `Idempotent-Replayed` response shows up as a
       warning in the gateway logs.
 
 8. **Pause, resume or terminate a run** while it is in flight.
 
+   macOS and Linux:
+
    ```bash
    curl -X POST http://localhost:5090/payment-runs/run-1/pause
    curl -X POST http://localhost:5090/payment-runs/run-1/resume
    curl -X POST http://localhost:5090/payment-runs/run-1/terminate
+   ```
+
+   Windows (PowerShell):
+
+   ```powershell
+   Invoke-RestMethod -Method Post http://localhost:5090/payment-runs/run-1/pause
+   Invoke-RestMethod -Method Post http://localhost:5090/payment-runs/run-1/resume
+   Invoke-RestMethod -Method Post http://localhost:5090/payment-runs/run-1/terminate
    ```
 
 9. **Stop the app** with `Ctrl+C`.
@@ -175,6 +227,8 @@ Dapr runtime instead, and Catalyst stores the workflow state.
 
 5. **Export the connection details** and start the app from the same shell.
 
+   macOS and Linux:
+
    ```bash
    export DAPR_GRPC_ENDPOINT="<grpc endpoint of the invoice-payments App ID>"
    export DAPR_HTTP_ENDPOINT="<http endpoint of the invoice-payments App ID>"
@@ -182,7 +236,16 @@ Dapr runtime instead, and Catalyst stores the workflow state.
    aspire run
    ```
 
-6. **Start a payment run and check its status** with the same `curl` commands as in the local
+   Windows (PowerShell):
+
+   ```powershell
+   $env:DAPR_GRPC_ENDPOINT = "<grpc endpoint of the invoice-payments App ID>"
+   $env:DAPR_HTTP_ENDPOINT = "<http endpoint of the invoice-payments App ID>"
+   $env:DAPR_API_TOKEN = "<api token of the invoice-payments App ID>"
+   aspire run
+   ```
+
+6. **Start a payment run and check its status** with the same commands as in the local
    steps 4 and 5.
 
 7. **Watch the run in the Catalyst console.** The workflow and agent runs appear for the
@@ -191,8 +254,9 @@ Dapr runtime instead, and Catalyst stores the workflow state.
 8. **Try the crash-and-resume demo.** Run it as in local step 7. State lives in Catalyst, so you
    do not need to remove a Docker volume. Use a new run id for each attempt.
 
-9. **Clean up.** Stop the app with `Ctrl+C`, then unset the three `DAPR_*` variables to go
-   back to local mode. Delete the App ID and the project in Catalyst if you no longer need them.
+9. **Clean up.** Stop the app with `Ctrl+C`, then remove the three `DAPR_*` variables to go
+   back to local mode: `unset DAPR_GRPC_ENDPOINT DAPR_HTTP_ENDPOINT DAPR_API_TOKEN` in bash, or
+   `Remove-Item Env:DAPR_GRPC_ENDPOINT, Env:DAPR_HTTP_ENDPOINT, Env:DAPR_API_TOKEN` in PowerShell. Delete the App ID and the project in Catalyst if you no longer need them.
 
 ## License
 
