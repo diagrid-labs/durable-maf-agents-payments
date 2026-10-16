@@ -81,7 +81,7 @@ authorization before you expose the API.
 - [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/), initialized with `dapr init`
 - [Diagrid Dapr Dev Dashboard](https://github.com/diagridio/dev-dashboard) (`diagrid-dev-dashboard` on your `PATH`). The AppHost starts it on port 9090.
 - An [OpenAI API key](https://platform.openai.com/api-keys). The agents use `gpt-4.1-mini` through a Dapr conversation component.
-- For the Catalyst path only: a [Diagrid Catalyst](https://www.diagrid.io/catalyst) account and the [Diagrid CLI](https://docs.diagrid.io/).
+- For the Catalyst path only: a [Diagrid Catalyst](https://catalyst.diagrid.io/) account and the [Diagrid CLI](https://docs.diagrid.io/getting-started/install-cli).
 
 ## Install
 
@@ -282,59 +282,94 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
 
 ## Run with Diagrid Catalyst
 
-When `DAPR_GRPC_ENDPOINT` is set in the environment that launches the AppHost, the AppHost skips
-the local Valkey container, sidecar and Dev Dashboard. The API connects to a Catalyst-managed
-Dapr runtime instead, and Catalyst stores the workflow state.
+On Catalyst, the workflow engine and its state store are managed by Diagrid, so the AppHost skips
+the local Valkey container, Dapr sidecar and Dev Dashboard. The API connects to a Catalyst-managed
+Dapr runtime instead. The AppHost switches to Catalyst mode when `DAPR_GRPC_ENDPOINT` is set in
+the environment that launches it.
 
-1. **Sign in to Catalyst and create a project** with the Diagrid CLI. Use the Catalyst docs for
-   the current commands.
+1. **Log in to Catalyst.**
 
    ```bash
    diagrid login
    ```
 
-2. **Create an App ID** named `invoice-payments` in your project.
+2. **Create a project** with managed workflow enabled and make it the default project for this
+   session. The managed workflow store is where Catalyst keeps the workflow state.
 
-3. **Create a conversation component** named `conversation-openai` in the project. Use the
-   OpenAI provider with model `gpt-4.1-mini` and your API key. In Catalyst the key lives in the
-   component, so you do not need `secrets.json`.
+   ```bash
+   diagrid project create invoice-payments-demo --enable-managed-workflow --deploy-managed-kv --deploy-managed-pubsub --wait --use
+   ```
 
-4. **Get the App ID connection details** (the gRPC endpoint, HTTP endpoint and API token) from the
-   Catalyst console or the Diagrid CLI.
+3. **Create an agent** for the app. Its name is the app id of the API.
 
-5. **Export the connection details** and start the app from the same shell.
+   ```bash
+   diagrid agent create invoice-payments --wait
+   ```
+
+4. **Create the conversation component** that the agents use for the LLM, with the same name
+   as in `InvoicePayments.AppHost/resources/conversation.yaml`. In Catalyst the key is stored
+   in the component, so you do not need `secrets.json`.
 
    macOS and Linux:
 
    ```bash
-   export DAPR_GRPC_ENDPOINT="<grpc endpoint of the invoice-payments App ID>"
-   export DAPR_HTTP_ENDPOINT="<http endpoint of the invoice-payments App ID>"
-   export DAPR_API_TOKEN="<api token of the invoice-payments App ID>"
+   diagrid component create conversation-openai \
+     --type conversation.openai \
+     --metadata key="$OPENAI_API_KEY" \
+     --metadata model=gpt-4.1-mini \
+     --scopes invoice-payments --wait
+   ```
+
+   Windows (PowerShell):
+
+   ```powershell
+   diagrid component create conversation-openai `
+     --type conversation.openai `
+     --metadata key="$env:OPENAI_API_KEY" `
+     --metadata model=gpt-4.1-mini `
+     --scopes invoice-payments --wait
+   ```
+
+5. **Get the connection details** of the `invoice-payments` agent (the gRPC endpoint, HTTP
+   endpoint and API token) from the Catalyst console, export them and start the app from the
+   same shell.
+
+   macOS and Linux:
+
+   ```bash
+   export DAPR_GRPC_ENDPOINT="<grpc endpoint of the invoice-payments agent>"
+   export DAPR_HTTP_ENDPOINT="<http endpoint of the invoice-payments agent>"
+   export DAPR_API_TOKEN="<api token of the invoice-payments agent>"
    aspire run
    ```
 
    Windows (PowerShell):
 
    ```powershell
-   $env:DAPR_GRPC_ENDPOINT = "<grpc endpoint of the invoice-payments App ID>"
-   $env:DAPR_HTTP_ENDPOINT = "<http endpoint of the invoice-payments App ID>"
-   $env:DAPR_API_TOKEN = "<api token of the invoice-payments App ID>"
+   $env:DAPR_GRPC_ENDPOINT = "<grpc endpoint of the invoice-payments agent>"
+   $env:DAPR_HTTP_ENDPOINT = "<http endpoint of the invoice-payments agent>"
+   $env:DAPR_API_TOKEN = "<api token of the invoice-payments agent>"
    aspire run
    ```
 
-6. **Start a payment run and check its status** with the same commands as in the local
-   steps 4 and 5.
+   Check in the Aspire dashboard that `payment-gateway` and `invoice-payments` are running.
+   There is no `statestore` or `dev-dashboard` resource in this mode.
 
-7. **Watch the run in the Catalyst console.** The workflow and agent runs appear for the
-   `invoice-payments` App ID, with their activity history.
+6. **Start a payment run and check its status** with the same commands as in local steps 4 and 5.
 
-8. **Try the crash-and-resume demo.** Run it as in local step 7, setting `SIMULATE_CRASH` in the shell that launches the AppHost. State lives in Catalyst, so you
-   do not need to remove a Docker volume. Use a new run id for each attempt.
+7. **Watch the run in Catalyst.** Open the [Catalyst console](https://catalyst.diagrid.io/) and go
+   to the workflows of your project. The `PaymentRunWorkflow` and the `AgentRunWorkflow` instances appear, with their activity history.
 
-9. **Clean up.** Stop the app with `Ctrl+C`, then remove the three `DAPR_*` variables to go
-   back to local mode: `unset DAPR_GRPC_ENDPOINT DAPR_HTTP_ENDPOINT DAPR_API_TOKEN` in bash, or
-   `Remove-Item Env:DAPR_GRPC_ENDPOINT, Env:DAPR_HTTP_ENDPOINT, Env:DAPR_API_TOKEN` in PowerShell. Delete the App ID and the project in Catalyst if you no longer need them.
+8. **Try the crash-and-resume demo.** Follow local step 7 with these changes: the workflow state
+   lives in Catalyst, so there is no container or volume to remove. Keep the three `DAPR_*`
+   variables set when you restart the app, set `SIMULATE_CRASH` in the shell before the first
+   start and remove it before the second one. Use a new run id for each attempt, and look at the
+   workflows in the Catalyst console where the local steps use the Dev Dashboard.
 
-## License
+9. **Clean up.** Stop the app with `Ctrl+C`, remove the three `DAPR_*` variables to go back to
+   local mode, then delete the Catalyst project:
 
-See [LICENSE](LICENSE).
+   ```bash
+   diagrid project delete invoice-payments-demo
+   ```
+
