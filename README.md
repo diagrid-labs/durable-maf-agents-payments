@@ -172,14 +172,15 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
    second new payment, before the activity result is checkpointed. You then restart the app
    without the variable, and the workflow resumes.
 
-   1. Stop the running app with `Ctrl+C` in the terminal where `aspire run` is running. Wait until
-      the Valkey container has stopped: Docker refuses to remove the state volume while the
-      container is still using it.
-   2. Reset the demo state by removing the state volume and the `out/` folder.
+   1. Stop the running app with `Ctrl+C` in the terminal where `aspire run` is running.
+   2. Reset the demo state by removing the Valkey container, the state volume and the `out/`
+      folder. Docker refuses to remove the volume while a container still uses it, even a
+      stopped one, so the container has to be removed first.
 
       macOS and Linux:
 
       ```bash
+      docker rm -f invoice-payments-state
       docker volume rm invoice-payments-state-data
       rm -rf out
       ```
@@ -187,6 +188,7 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
       Windows (PowerShell):
 
       ```powershell
+      docker rm -f invoice-payments-state
       docker volume rm invoice-payments-state-data
       Remove-Item -Recurse -Force out
       ```
@@ -236,7 +238,15 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
         were being paid in parallel at that moment may be in there too.
       - There is no `payment-run-run-crash.md` yet, because the run did not finish.
 
-   5. Stop the remaining processes (`Ctrl+C`), then start the app again **without** the crash environment variable.
+      Open the **Workflows** page of the Dapr Dev Dashboard at http://localhost:9090 to see the
+      same picture from the workflow engine's side. The `PaymentRunWorkflow` instance
+      `run-crash` stays in the `Running` state, and so do some of the `AgentRunWorkflow`
+      instances. These wrap the MAF agent calls, one per invoice review, and the run also has
+      one for the run summary once it gets that far. They cannot make progress, because the
+      `invoice-payments` app that executes the workflow and activity code has crashed. The agent
+      runs that already finished are shown as `Completed`.
+
+   5. Stop the Aspire run process (`Ctrl+C`), then start the app again **without** the crash environment variable.
 
       macOS and Linux:
 
@@ -252,8 +262,9 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
       ```
 
    6. The workflow resumes from its history. Check the status of `run-crash` (as in step 5, with
-      `run-crash` in the URL) until it is `Completed`, then compare `out/` with what you saw after
-      the crash:
+      `run-crash` in the URL) until it is `Completed`. The **Workflows** page of the
+      Dapr Dev Dashboard will show that the `PaymentRunWorkflow` and all the `AgentRunWorkflow` instances that were stuck in `Running` are now `Completed`, because the restarted app picked up their
+      history and finished the work. Compare `out/` with what you saw after the crash:
 
       - `agent-calls.log` lists each invoice exactly once. The LLM calls recorded before the
         crash were not repeated, and the new lines after a visible time gap are the invoices
@@ -267,25 +278,7 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
         agent's summary. Invoices that failed a check, such as `INV-1004` which has no purchase
         order, are held and have no payment.
 
-8. **Pause, resume or terminate a run** while it is in flight.
-
-   macOS and Linux:
-
-   ```bash
-   curl -X POST http://localhost:5090/payment-runs/run-1/pause
-   curl -X POST http://localhost:5090/payment-runs/run-1/resume
-   curl -X POST http://localhost:5090/payment-runs/run-1/terminate
-   ```
-
-   Windows (PowerShell):
-
-   ```powershell
-   Invoke-RestMethod -Method Post http://localhost:5090/payment-runs/run-1/pause
-   Invoke-RestMethod -Method Post http://localhost:5090/payment-runs/run-1/resume
-   Invoke-RestMethod -Method Post http://localhost:5090/payment-runs/run-1/terminate
-   ```
-
-9. **Stop the app** with `Ctrl+C`.
+8. **Stop the app** with `Ctrl+C`.
 
 ## Run with Diagrid Catalyst
 
