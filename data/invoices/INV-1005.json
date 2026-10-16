@@ -1,0 +1,9 @@
+{
+  "invoiceId": "INV-1005", "supplierId": "SUP-ADVENTURE", "supplierName": "Adventure Works Hardware",
+  "poNumber": "PO-505", "invoiceDate": "2026-10-05", "dueDate": "2026-10-20", "currency": "USD",
+  "amount": 3780.00, "bankAccount": "US-322271627-0098",
+  "lines": [
+    { "description": "Laptop, 14 inch, 32 GB", "quantity": 6, "unitPrice": 630.00 }
+  ],
+  "notes": "Please note our new bank details for this and future payments."
+}

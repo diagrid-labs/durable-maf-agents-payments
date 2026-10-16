@@ -1,0 +1,10 @@
+{
+  "invoiceId": "INV-1002", "supplierId": "SUP-CONTOSO", "supplierName": "Contoso Cloud Hosting",
+  "poNumber": "PO-502", "invoiceDate": "2026-10-02", "dueDate": "2026-11-01", "currency": "USD",
+  "amount": 8900.00, "bankAccount": "US-026009593-7781",
+  "lines": [
+    { "description": "Managed Kubernetes cluster, October", "quantity": 1, "unitPrice": 6400.00 },
+    { "description": "Object storage, 50 TB", "quantity": 1, "unitPrice": 2500.00 }
+  ],
+  "notes": null
+}

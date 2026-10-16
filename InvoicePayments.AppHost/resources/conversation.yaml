@@ -1,0 +1,16 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: conversation-openai
+spec:
+  type: conversation.openai
+  version: v1
+  metadata:
+  - name: key
+    secretKeyRef:
+      name: openai-api-key
+      key: openai-api-key
+  - name: model
+    value: gpt-4.1-mini
+auth:
+  secretStore: local-secret-store

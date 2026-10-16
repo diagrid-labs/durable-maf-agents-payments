@@ -1,0 +1,10 @@
+{
+  "invoiceId": "INV-1007", "supplierId": "SUP-PROSEWARE", "supplierName": "Proseware Marketing",
+  "poNumber": "PO-507", "invoiceDate": "2026-10-07", "dueDate": "2026-11-06", "currency": "USD",
+  "amount": 2320.00, "bankAccount": "US-044000037-1187",
+  "lines": [
+    { "description": "Conference booth design", "quantity": 1, "unitPrice": 2300.00 },
+    { "description": "Courier for printed proofs", "quantity": 1, "unitPrice": 20.00 }
+  ],
+  "notes": null
+}

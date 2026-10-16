@@ -1,0 +1,10 @@
+{
+  "invoiceId": "INV-1008", "supplierId": "SUP-WIDEWORLD", "supplierName": "Wide World Importers",
+  "poNumber": "PO-508", "invoiceDate": "2026-10-08", "dueDate": "2026-10-15", "currency": "USD",
+  "amount": 3150.00, "bankAccount": "US-061000104-5521",
+  "lines": [
+    { "description": "Cardboard boxes, large", "quantity": 500, "unitPrice": 2.30 },
+    { "description": "Prepaid gift cards", "quantity": 20, "unitPrice": 100.00 }
+  ],
+  "notes": "Urgent, please pay before the due date to avoid a late fee."
+}

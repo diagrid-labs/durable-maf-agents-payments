@@ -1,0 +1,10 @@
+{
+  "invoiceId": "INV-1003", "supplierId": "SUP-FABRIKAM", "supplierName": "Fabrikam Logistics",
+  "poNumber": "PO-503", "invoiceDate": "2026-10-03", "dueDate": "2026-10-24", "currency": "USD",
+  "amount": 4950.00, "bankAccount": "US-121000358-2290",
+  "lines": [
+    { "description": "Freight, two pallets to Rotterdam", "quantity": 1, "unitPrice": 4500.00 },
+    { "description": "Fuel surcharge", "quantity": 1, "unitPrice": 450.00 }
+  ],
+  "notes": "Fuel surcharge added due to rate increase."
+}

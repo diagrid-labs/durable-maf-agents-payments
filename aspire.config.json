@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "InvoicePayments.AppHost/InvoicePayments.AppHost.csproj"
+  }
+}

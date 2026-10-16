@@ -1,0 +1,9 @@
+{
+  "invoiceId": "INV-1006", "supplierId": "SUP-LITWARE", "supplierName": "Litware Software",
+  "poNumber": "PO-506", "invoiceDate": "2026-10-06", "dueDate": "2026-11-05", "currency": "USD",
+  "amount": 12000.00, "bankAccount": "US-031000503-9034",
+  "lines": [
+    { "description": "IDE license, annual, per seat", "quantity": 40, "unitPrice": 300.00 }
+  ],
+  "notes": null
+}

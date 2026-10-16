@@ -1,0 +1,9 @@
+{
+  "invoiceId": "INV-1004", "supplierId": "SUP-TAILSPIN", "supplierName": "Tailspin Catering",
+  "poNumber": null, "invoiceDate": "2026-10-04", "dueDate": "2026-10-18", "currency": "USD",
+  "amount": 860.00, "bankAccount": "US-091000019-3305",
+  "lines": [
+    { "description": "Team offsite lunch, 43 people", "quantity": 43, "unitPrice": 20.00 }
+  ],
+  "notes": "Ordered by phone."
+}

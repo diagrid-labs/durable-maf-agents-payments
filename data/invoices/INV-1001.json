@@ -1,0 +1,10 @@
+{
+  "invoiceId": "INV-1001", "supplierId": "SUP-NORTHWIND", "supplierName": "Northwind Office Supplies",
+  "poNumber": "PO-501", "invoiceDate": "2026-10-01", "dueDate": "2026-10-31", "currency": "USD",
+  "amount": 1240.00, "bankAccount": "US-021000021-4410",
+  "lines": [
+    { "description": "A4 copy paper, 40 boxes", "quantity": 40, "unitPrice": 21.00 },
+    { "description": "Whiteboard markers, 20 packs", "quantity": 20, "unitPrice": 20.00 }
+  ],
+  "notes": null
+}

@@ -1,0 +1,25 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.0">
+
+  <ItemGroup>
+    <ProjectReference Include="..\InvoicePayments.ApiService\InvoicePayments.ApiService.csproj" />
+    <ProjectReference Include="..\InvoicePayments.PaymentGateway\InvoicePayments.PaymentGateway.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Valkey" Version="13.6.0" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Dapr" Version="13.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="resources/**/*.yaml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>5d6b1f2e-8c1a-4a0e-9a57-2f1c0b7d4e61</UserSecretsId>
+  </PropertyGroup>
+
+</Project>
