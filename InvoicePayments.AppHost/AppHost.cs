@@ -6,8 +6,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 var dataDir = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "data"));
 var outputDir = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "out"));
 
-// Catalyst mode: when the Catalyst connection values are present in the environment that
-// launches the AppHost, the API talks to a Catalyst-managed Dapr sidecar instead of a local one.
+// Diagrid mode: when the Diagrid connection values are present in the environment that
+// launches the AppHost, the API talks to a Diagrid-managed Dapr sidecar instead of a local one.
 var catalystGrpc = builder.Configuration["DAPR_GRPC_ENDPOINT"];
 var useCatalyst = !string.IsNullOrWhiteSpace(catalystGrpc);
 

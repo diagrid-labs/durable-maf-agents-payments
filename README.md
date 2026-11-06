@@ -81,7 +81,7 @@ authorization before you expose the API.
 - [Dapr CLI](https://docs.dapr.io/getting-started/install-dapr-cli/), initialized with `dapr init`
 - [Diagrid Dapr Dev Dashboard](https://github.com/diagridio/dev-dashboard) (`diagrid-dev-dashboard` on your `PATH`). The AppHost starts it on port 9090.
 - An [OpenAI API key](https://platform.openai.com/api-keys). The agents use `gpt-4.1-mini` through a Dapr conversation component.
-- For the Catalyst path only: a [Diagrid Catalyst](https://catalyst.diagrid.io/) account and the [Diagrid CLI](https://docs.diagrid.io/getting-started/install-cli).
+- For the Diagrid path only: a [Diagrid](https://catalyst.diagrid.io/) account and the [Diagrid CLI](https://docs.diagrid.io/getting-started/install-cli).
 
 ## Install
 
@@ -280,21 +280,21 @@ volume, so state survives restarts), a Dapr sidecar for the API, and the Dev Das
 
 8. **Stop the app** with `Ctrl+C`.
 
-## Run with Diagrid Catalyst
+## Run with Diagrid
 
-On Catalyst, the workflow engine and its state store are managed by Diagrid, so the AppHost skips
-the local Valkey container, Dapr sidecar and Dev Dashboard. The API connects to a Catalyst-managed
-Dapr runtime instead. The AppHost switches to Catalyst mode when `DAPR_GRPC_ENDPOINT` is set in
+On Diagrid, the workflow engine and its state store are managed by Diagrid, so the AppHost skips
+the local Valkey container, Dapr sidecar and Dev Dashboard. The API connects to a Diagrid-managed
+Dapr runtime instead. The AppHost switches to Diagrid mode when `DAPR_GRPC_ENDPOINT` is set in
 the environment that launches it.
 
-1. **Log in to Catalyst.**
+1. **Log in to Diagrid.**
 
    ```bash
    diagrid login
    ```
 
 2. **Create a project** with managed workflow enabled and make it the default project for this
-   session. The managed workflow store is where Catalyst keeps the workflow state.
+   session. The managed workflow store is where Diagrid keeps the workflow state.
 
    ```bash
    diagrid project create invoice-payments-demo --enable-managed-workflow --deploy-managed-kv --deploy-managed-pubsub --wait --use
@@ -307,7 +307,7 @@ the environment that launches it.
    ```
 
 4. **Create the conversation component** that the agents use for the LLM, with the same name
-   as in `InvoicePayments.AppHost/resources/conversation.yaml`. In Catalyst the key is stored
+   as in `InvoicePayments.AppHost/resources/conversation.yaml`. In Diagrid the key is stored
    in the component, so you do not need `secrets.json`.
 
    macOS and Linux:
@@ -331,7 +331,7 @@ the environment that launches it.
    ```
 
 5. **Get the connection details** of the `invoice-payments` agent (the gRPC endpoint, HTTP
-   endpoint and API token) from the Catalyst console, export them and start the app from the
+   endpoint and API token) from the Diagrid Console, export them and start the app from the
    same shell.
 
    macOS and Linux:
@@ -357,17 +357,17 @@ the environment that launches it.
 
 6. **Start a payment run and check its status** with the same commands as in local steps 4 and 5.
 
-7. **Watch the run in Catalyst.** Open the [Catalyst console](https://catalyst.diagrid.io/) and go
+7. **Watch the run in Diagrid.** Open the [Diagrid Console](https://catalyst.diagrid.io/) and go
    to the workflows of your project. The `PaymentRunWorkflow` and the `AgentRunWorkflow` instances appear, with their activity history.
 
 8. **Try the crash-and-resume demo.** Follow local step 7 with these changes: the workflow state
-   lives in Catalyst, so there is no container or volume to remove. Keep the three `DAPR_*`
+   lives in Diagrid, so there is no container or volume to remove. Keep the three `DAPR_*`
    variables set when you restart the app, set `SIMULATE_CRASH` in the shell before the first
    start and remove it before the second one. Use a new run id for each attempt, and look at the
-   workflows in the Catalyst console where the local steps use the Dev Dashboard.
+   workflows in the Diagrid Console where the local steps use the Dev Dashboard.
 
 9. **Clean up.** Stop the app with `Ctrl+C`, remove the three `DAPR_*` variables to go back to
-   local mode, then delete the Catalyst project:
+   local mode, then delete the Diagrid project:
 
    ```bash
    diagrid project delete invoice-payments-demo
